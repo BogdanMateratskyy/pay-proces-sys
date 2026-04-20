@@ -16,7 +16,7 @@ The system consists of several microservices:
 
 The local development environment uses:
 - **PostgreSQL**: For persistent data storage.
-- **Kafka & Zookeeper**: For event-driven communication.
+- **Kafka**: For event-driven communication.
 
 ## Getting Started
 
@@ -25,6 +25,15 @@ The local development environment uses:
 - Java 21
 - Maven 3.8+
 - Docker & Docker Compose
+
+## Current Version: 0.0.2
+
+### Features Implemented
+- Configured Mockito as Java agent for tests
+- JWT Authentication Middleware (Payment Service)
+- Shared Security Library
+- Docker Compose setup (Postgres, Kafka)
+- Microservices skeleton implementation
 
 ### Local Infrastructure
 
@@ -44,8 +53,7 @@ mvn clean install
 
 ## Versioning
 
-Current Version: 0.0.1
-(Semantic versioning is used)
+Current Version: 0.0.2 (Semantic versioning is used)
 
 ## Phase 1: Setup & Infrastructure (Completed)
 - [x] Initialized project structure for microservices.
