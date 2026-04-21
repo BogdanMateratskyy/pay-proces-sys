@@ -1,0 +1,86 @@
+name: Java CI/CD with Maven
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+    
+env:
+  JAVA_VERSION: 21
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:18.3
+        env:
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB || 'payment_db' }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER || 'user' }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD || 'password' }}
+        ports:
+          - 35432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      
+      kafka:
+        image: apache/kafka:4.2.0
+        ports:
+          - 9092:9092
+        env:
+          KAFKA_NODE_ID: 1
+          KAFKA_PROCESS_ROLES: broker,controller
+          KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+          KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+          KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+          KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+          KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+          KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+          KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+          KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+          KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+          CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+          KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
+        options: >-
+          --health-cmd "sh -c '/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 15
+          --health-start-period 30s
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+    
+    - name: Set up JDK ${{ env.JAVA_VERSION }}
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ env.JAVA_VERSION }}
+        distribution: 'temurin'
+        cache: maven
+        
+    - name: Verify Code Style (Spotless)
+      run: mvn spotless:check
+
+    - name: Build with Maven
+      run: mvn -B clean install -DskipTests
+
+    - name: Wait for Kafka Health Check
+      run: |
+        echo "Waiting for Kafka to be healthy..."
+        timeout 90s bash -c 'until nc -z localhost 9092; do echo "Waiting for Kafka port..."; sleep 2; done'
+        echo "Kafka is healthy!"
+
+    - name: Run Tests
+      run: mvn test
+      env:
+        SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:35432/${{ secrets.POSTGRES_DB || 'payment_db' }}
+        SPRING_DATASOURCE_USERNAME: ${{ secrets.POSTGRES_USER || 'user' }}
+        SPRING_DATASOURCE_PASSWORD: ${{ secrets.POSTGRES_PASSWORD || 'password' }}
+        SPRING_KAFKA_BOOTSTRAP_SERVERS: localhost:9092

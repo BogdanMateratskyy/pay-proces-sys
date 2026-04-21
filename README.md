@@ -26,15 +26,20 @@ The local development environment uses:
 - Maven 3.8+
 - Docker & Docker Compose
 
-## Current Version: 0.0.3
+## Current Version: 0.0.5
 
 ### Features Implemented
+- CI/CD Pipelines (GitHub Actions & CircleCI)
 - Configured Mockito as Java agent for tests
 - JWT Authentication Middleware (Payment Service)
 - Payment Initiation Endpoint (`POST /api/v1/payments`)
 - Shared Security Library
 - Docker Compose setup (Postgres, Kafka)
 - Microservices skeleton implementation
+
+### CI/CD
+- **GitHub Actions**: Automated build and test on push and pull requests.
+- **CircleCI**: Continuous integration with service containers for integration testing.
 
 ### Local Infrastructure
 
@@ -54,11 +59,11 @@ mvn clean install
 
 ## Versioning
 
-Current Version: 0.0.3 (Semantic versioning is used)
+Current Version: 0.0.5 (Semantic versioning is used)
 
 ## Phase 1: Setup & Infrastructure (Completed)
 - [x] Initialized project structure for microservices.
 - [x] Set up Docker Compose for local infrastructure.
 - [x] Defined shared Event Schema.
 - [x] Implemented Shared Security Library.
-- [x] Configured CircleCI pipeline.
+- [x] Configured GitHub Actions & CircleCI pipelines.
