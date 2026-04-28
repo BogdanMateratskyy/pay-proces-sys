@@ -1,0 +1,58 @@
+version: 2.1
+
+jobs:
+  build:
+    docker:
+      - image: cimg/openjdk:21.0
+      - image: cimg/postgres:18.1.0
+        environment:
+          POSTGRES_DB: payment_db
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+      - image: apache/kafka:4.2.0
+        environment:
+          KAFKA_NODE_ID: 1
+          KAFKA_PROCESS_ROLES: broker,controller
+          KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+          KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+          KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+          KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+          KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+          KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+          KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+          KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+          KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+          CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+    steps:
+      - run:
+          name: Wait for Kafka
+          command: |
+            # CircleCI secondary containers are accessible via localhost.
+            # We use nc to wait for the Kafka port to be open.
+            timeout 90s bash -c 'until nc -z localhost 9092; do echo "Waiting for Kafka port..."; sleep 2; done'
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "pom.xml" }}
+            - v1-dependencies-
+      - run:
+          name: Build and Test
+          command: mvn -B clean install -DskipTests
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: v1-dependencies-{{ checksum "pom.xml" }}
+      - run:
+          name: Run Tests
+          command: mvn test
+          environment:
+            SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/payment_db
+            SPRING_DATASOURCE_USERNAME: user
+            SPRING_DATASOURCE_PASSWORD: password
+            SPRING_KAFKA_BOOTSTRAP_SERVERS: localhost:9092
+
+workflows:
+  version: 2
+  build-and-test:
+    jobs:
+      - build
