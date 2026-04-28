@@ -49,7 +49,7 @@ class PaymentControllerTest {
   @Test
   void shouldInitiatePaymentSuccessfully() throws Exception {
     PaymentRequest request =
-        new PaymentRequest(new BigDecimal("100.00"), "USD", "SENDER123", "RECP123");
+        new PaymentRequest(new BigDecimal("100.00"), "USD", "RECP123", "SENDER123");
 
     mockMvc
         .perform(
@@ -66,7 +66,7 @@ class PaymentControllerTest {
   @Test
   void shouldReturnForbiddenWhenNoToken() throws Exception {
     PaymentRequest request =
-        new PaymentRequest(new BigDecimal("100.00"), "USD", "SENDER123", "RECP123");
+        new PaymentRequest(new BigDecimal("100.00"), "USD", "RECP123", "SENDER123");
 
     mockMvc
         .perform(
@@ -74,5 +74,46 @@ class PaymentControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void shouldReturnBadRequestWhenAmountIsNegative() throws Exception {
+    PaymentRequest request =
+        new PaymentRequest(new BigDecimal("-100.00"), "USD", "RECP123", "SENDER123");
+
+    mockMvc
+        .perform(
+            post("/api/v1/payments")
+                .header("Authorization", "Bearer " + validToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  void shouldReturnBadRequestWhenCurrencyIsInvalid() throws Exception {
+    PaymentRequest request =
+        new PaymentRequest(new BigDecimal("100.00"), "US", "RECP123", "SENDER123");
+
+    mockMvc
+        .perform(
+            post("/api/v1/payments")
+                .header("Authorization", "Bearer " + validToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  void shouldReturnBadRequestWhenRecipientIsEmpty() throws Exception {
+    PaymentRequest request = new PaymentRequest(new BigDecimal("100.00"), "USD", "", "SENDER123");
+
+    mockMvc
+        .perform(
+            post("/api/v1/payments")
+                .header("Authorization", "Bearer " + validToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isBadRequest());
   }
 }
