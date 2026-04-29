@@ -17,7 +17,7 @@
   <description>Payment Processing System</description>
 
   <properties>
-    <revision>0.0.8</revision>
+    <revision>0.0.9</revision>
     <java.version>21</java.version>
     <spring-cloud.version>2025.0.1</spring-cloud.version>
     <lombok.version>1.18.38</lombok.version>
@@ -27,6 +27,7 @@
     <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
     <mockito.version>5.17.0</mockito.version>
     <spotless.plugin.version>3.1.0</spotless.plugin.version>
+    <bucket4j.version>0.12.8</bucket4j.version>
   </properties>
 
   <modules>
@@ -66,6 +67,11 @@
         <groupId>org.mockito</groupId>
         <artifactId>mockito-core</artifactId>
         <version>${mockito.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.giffing.bucket4j.spring.boot.starter</groupId>
+        <artifactId>bucket4j-spring-boot-starter</artifactId>
+        <version>${bucket4j.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
