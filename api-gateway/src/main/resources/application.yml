@@ -1,0 +1,18 @@
+server:
+  port: 8080
+
+spring:
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: payment-service
+              uri: lb://payment-service
+              predicates:
+                - Path=/api/v1/payments/**
+
+jwt:
+  secret: mysecretkeymysecretkeymysecretkeymysecretkey
+  expiration: 86400000 # a day
+  refresh-expiration: 604800000 # 7 days
