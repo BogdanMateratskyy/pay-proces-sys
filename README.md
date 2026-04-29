@@ -26,9 +26,10 @@ The local development environment uses:
 - Maven 3.8+
 - Docker & Docker Compose
 
-## Current Version: 0.0.8
+## Current Version: 0.0.9
 
 ### Features Implemented
+- Global Rate Limiting in API Gateway (Bucket4j)
 - Persistence logic for payment requests (save to PostgreSQL with `PENDING` status)
 - PostgreSQL database setup & schema management (Flyway)
 - CI/CD Pipelines (GitHub Actions & CircleCI)
@@ -62,7 +63,7 @@ mvn clean install
 
 ## Versioning
 
-Current Version: 0.0.8 (Semantic versioning is used)
+Current Version: 0.0.9 (Semantic versioning is used)
 
 ## Phase 1: Setup & Infrastructure (Completed)
 - [x] Initialized project structure for microservices.

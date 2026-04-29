@@ -11,6 +11,20 @@ spring:
               uri: lb://payment-service
               predicates:
                 - Path=/api/v1/payments/**
+  cache:
+    cache-names:
+      - buckets
+
+bucket4j:
+  enabled: true
+  filters:
+    - cache-name: buckets
+      url: /api/v1/payments/**
+      rate-limits:
+        - bandwidths:
+            - capacity: 100
+              time: 1
+              unit: minutes
 
 jwt:
   secret: mysecretkeymysecretkeymysecretkeymysecretkey
