@@ -26,9 +26,10 @@ The local development environment uses:
 - Maven 3.8+
 - Docker & Docker Compose
 
-## Current Version: 0.0.6
+## Current Version: 0.0.7
 
 ### Features Implemented
+- PostgreSQL database setup & schema management (Flyway)
 - CI/CD Pipelines (GitHub Actions & CircleCI)
 - Configured Mockito as Java agent for tests
 - JWT Authentication Middleware (Payment Service)
@@ -60,7 +61,7 @@ mvn clean install
 
 ## Versioning
 
-Current Version: 0.0.6 (Semantic versioning is used)
+Current Version: 0.0.7 (Semantic versioning is used)
 
 ## Phase 1: Setup & Infrastructure (Completed)
 - [x] Initialized project structure for microservices.

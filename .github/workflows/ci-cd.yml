@@ -78,9 +78,14 @@ jobs:
         echo "Kafka is healthy!"
 
     - name: Run Tests
-      run: mvn test
+      run: mvn -B test -Dspring.profiles.active=test
       env:
         SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:35432/${{ secrets.POSTGRES_DB || 'payment_db' }}
         SPRING_DATASOURCE_USERNAME: ${{ secrets.POSTGRES_USER || 'user' }}
         SPRING_DATASOURCE_PASSWORD: ${{ secrets.POSTGRES_PASSWORD || 'password' }}
+        SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
+        SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.PostgreSQLDialect
         SPRING_KAFKA_BOOTSTRAP_SERVERS: localhost:9092
+        JWT_SECRET: ${{ secrets.JWT_SECRET || 'mysecretkeymysecretkeymysecretkeymysecretkey' }}
+        JWT_EXPIRATION: 3600000
+        JWT_REFRESH_EXPIRATION: 604800000
