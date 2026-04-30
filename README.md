@@ -26,9 +26,12 @@ The local development environment uses:
 - Maven 3.8+
 - Docker & Docker Compose
 
-## Current Version: 0.0.9
+## Current Version: 0.0.10
 
 ### Features Implemented
+- Event-Driven Architecture (Kafka)
+- Transactional Outbox Pattern for reliable event publishing
+- Kafka Consumer in Processing Service
 - Global Rate Limiting in API Gateway (Bucket4j)
 - Persistence logic for payment requests (save to PostgreSQL with `PENDING` status)
 - PostgreSQL database setup & schema management (Flyway)
@@ -63,7 +66,7 @@ mvn clean install
 
 ## Versioning
 
-Current Version: 0.0.9 (Semantic versioning is used)
+Current Version: 0.0.10 (Semantic versioning is used)
 
 ## Phase 1: Setup & Infrastructure (Completed)
 - [x] Initialized project structure for microservices.
@@ -71,3 +74,16 @@ Current Version: 0.0.9 (Semantic versioning is used)
 - [x] Defined shared Event Schema.
 - [x] Implemented Shared Security Library.
 - [x] Configured GitHub Actions & CircleCI pipelines.
+
+## Phase 2: Core Payment Features (Completed)
+- [x] Implement JWT Authentication Middleware.
+- [x] Create Payment Initiation Endpoint.
+- [x] Implement Payment Data Validation.
+- [x] Set up PostgreSQL database and schema for payments.
+- [x] Implement persistence logic to save payments.
+- [x] Implement Rate Limiting logic at API Gateway.
+
+## Phase 3: Messaging & Event-Driven Architecture (Completed)
+- [x] Implement Kafka Producer in Payment Service.
+- [x] Implement Outbox Pattern for reliable Kafka publishing.
+- [x] Implement Kafka Consumer in Processing Service.
