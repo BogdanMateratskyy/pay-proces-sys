@@ -25,9 +25,12 @@ spring:
     validate-on-migrate: true
   kafka:
     bootstrap-servers: localhost:9092
+    payment-processed-topic: payments.processed
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    consumer:
+      group-id: payment-group
 
 jwt:
   secret: mysecretkeymysecretkeymysecretkeymysecretkey

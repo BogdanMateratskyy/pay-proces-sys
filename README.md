@@ -26,9 +26,14 @@ The local development environment uses:
 - Maven 3.8+
 - Docker & Docker Compose
 
-## Current Version: 0.0.10
+## Current Version: 0.0.11
 
 ### Features Implemented
+- Unit tests for OutboxPublisher
+- Intelligent Routing Logic to select Bank Adapter
+- Bank Adapter Interface and Mock Implementations
+- Feign Client communication between Processing and Bank services
+- Failure handling for bank routing
 - Event-Driven Architecture (Kafka)
 - Transactional Outbox Pattern for reliable event publishing
 - Kafka Consumer in Processing Service
@@ -66,7 +71,7 @@ mvn clean install
 
 ## Versioning
 
-Current Version: 0.0.10 (Semantic versioning is used)
+Current Version: 0.0.11 (Semantic versioning is used)
 
 ## Phase 1: Setup & Infrastructure (Completed)
 - [x] Initialized project structure for microservices.
@@ -87,3 +92,9 @@ Current Version: 0.0.10 (Semantic versioning is used)
 - [x] Implement Kafka Producer in Payment Service.
 - [x] Implement Outbox Pattern for reliable Kafka publishing.
 - [x] Implement Kafka Consumer in Processing Service.
+
+## Phase 4: Intelligent Routing & Bank Integration (Completed)
+- [x] Implement Routing Logic to select the appropriate Bank Adapter.
+- [x] Implement Bank Adapter Interface and mock implementations.
+- [x] Implement communication between Processing Service and Bank Adapters.
+- [x] Handle routing failures by marking payment as FAILED.
