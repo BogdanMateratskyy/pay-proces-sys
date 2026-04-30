@@ -1,3 +1,4 @@
+SET SEARCH_PATH TO payment;
 CREATE TABLE IF NOT EXISTS payments
 (
     id                UUID PRIMARY KEY,
