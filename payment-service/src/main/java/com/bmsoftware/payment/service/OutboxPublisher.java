@@ -58,7 +58,9 @@ public class OutboxPublisher {
 
   private String getTopicForEvent(EventType eventType) {
     return switch (eventType) {
-      case EventType.PAYMENT_CREATED -> "payments.created";
+      case PAYMENT_CREATED -> "payments.created";
+      case PAYMENT_COMPLETED -> "payments.completed";
+      case PAYMENT_FAILED -> "payments.failed";
     };
   }
 }
