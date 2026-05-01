@@ -26,9 +26,10 @@ The local development environment uses:
 - Maven 3.8+
 - Docker & Docker Compose
 
-## Current Version: 0.0.11
+## Current Version: 0.0.12
 
 ### Features Implemented
+- Resilience patterns (Retry, Circuit Breaker, Fallback) for Bank Integrations
 - Unit tests for OutboxPublisher
 - Intelligent Routing Logic to select Bank Adapter
 - Bank Adapter Interface and Mock Implementations
@@ -71,7 +72,7 @@ mvn clean install
 
 ## Versioning
 
-Current Version: 0.0.11 (Semantic versioning is used)
+Current Version: 0.0.12 (Semantic versioning is used)
 
 ## Phase 1: Setup & Infrastructure (Completed)
 - [x] Initialized project structure for microservices.
@@ -98,3 +99,9 @@ Current Version: 0.0.11 (Semantic versioning is used)
 - [x] Implement Bank Adapter Interface and mock implementations.
 - [x] Implement communication between Processing Service and Bank Adapters.
 - [x] Handle routing failures by marking payment as FAILED.
+
+## Phase 5: Resilience & Advanced Integration (Completed)
+- [x] Implement Retry Strategy with exponential backoff for Bank API calls.
+- [x] Implement Circuit Breaker pattern for Bank Integrations.
+- [x] Implement Fallback Strategy for multi-bank support.
+- [x] Implement Bulkhead and Timeouts for resource protection.

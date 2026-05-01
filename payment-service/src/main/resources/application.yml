@@ -24,7 +24,7 @@ spring:
     baseline-on-migrate: true
     validate-on-migrate: true
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     payment-processed-topic: payments.processed
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
@@ -33,6 +33,6 @@ spring:
       group-id: payment-group
 
 jwt:
-  secret: mysecretkeymysecretkeymysecretkeymysecretkey
+  secret: ${JWT_PAYMENT_SECRET:mysecretkeymysecretkeymysecretkeymysecretkey}
   expiration: 86400000 # a day
   refresh-expiration: 604800000 # 7 days

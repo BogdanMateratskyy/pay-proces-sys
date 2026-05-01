@@ -21,3 +21,55 @@ jwt:
   secret: mysecretkeymysecretkeymysecretkeymysecretkey
   expiration: 86400000 # a day
   refresh-expiration: 604800000 # 7 days
+
+resilience4j:
+  retry:
+    retryAspectOrder: 3
+    instances:
+      bankRetry:
+        baseConfig: default
+    configs:
+      default:
+        maxAttempts: 3
+        waitDuration: 1s
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+        retryExceptions:
+          - feign.FeignException.ServiceUnavailable
+          - feign.FeignException.GatewayTimeout
+          - java.io.IOException
+  circuitbreaker:
+    circuitBreakerAspectOrder: 4
+    instances:
+      bankCircuitBreaker:
+        baseConfig: default
+    configs:
+      default:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        waitDurationInOpenState: 5s
+        failureRateThreshold: 50
+        eventConsumerBufferSize: 10
+        recordExceptions:
+          - feign.FeignException.ServiceUnavailable
+          - feign.FeignException.GatewayTimeout
+          - java.io.IOException
+  bulkhead:
+    instances:
+      bankBulkhead:
+        baseConfig: default
+    configs:
+      default:
+        maxConcurrentCalls: 10
+        maxWaitDuration: 0
+  feign:
+    client:
+      config:
+        default:
+          connectTimeout: 2000
+          readTimeout: 5000
+        bank-adapter-service:
+          connectTimeout: 1000
+          readTimeout: 2000
