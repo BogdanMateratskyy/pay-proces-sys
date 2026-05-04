@@ -6,7 +6,6 @@ import com.bmsoftware.payment.mapper.PaymentMapper;
 import com.bmsoftware.payment.model.OutboxEvent;
 import com.bmsoftware.payment.model.Payment;
 import com.bmsoftware.payment.model.PaymentStatusEntity;
-import com.bmsoftware.payment.repository.OutboxRepository;
 import com.bmsoftware.payment.repository.PaymentRepository;
 import com.bmsoftware.shared.dto.AggregateType;
 import com.bmsoftware.shared.dto.EventType;
@@ -28,7 +27,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class PaymentService {
 
   private final PaymentRepository paymentRepository;
-  private final OutboxRepository outboxRepository;
+  private final OutboxService outboxService;
+  private final PaymentAuditLogService auditLogService;
   private final PaymentMapper paymentMapper;
   private final ObjectMapper objectMapper;
 
@@ -41,45 +41,47 @@ public class PaymentService {
     UUID paymentId = event.paymentId();
     findById(paymentId)
         .ifPresentOrElse(
-            payment -> {
-              PaymentStatus newStatus = event.status();
-              PaymentStatusEntity statusEntity =
-                  PaymentStatusEntity.builder()
-                      .payment(payment)
-                      .status(newStatus)
-                      .transactionId(event.transactionId())
-                      .errorMessage(event.errorMessage())
-                      .build();
-              payment.setStatus(statusEntity);
-              paymentRepository.save(payment);
-              log.info("Payment ID: {} status updated to: {}", paymentId, newStatus);
-            },
+            payment -> updatePaymentStatus(event, payment),
             () -> log.warn("Payment ID: {} not found, skipping status update", paymentId));
+  }
+
+  private void updatePaymentStatus(PaymentProcessedEvent event, Payment payment) {
+    PaymentStatus newStatus = event.status();
+    PaymentStatus previousStatus =
+        payment.getStatus() != null ? payment.getStatus().getStatus() : null;
+    PaymentStatusEntity statusEntity =
+        PaymentStatusEntity.builder()
+            .payment(payment)
+            .status(newStatus)
+            .transactionId(event.transactionId())
+            .errorMessage(event.errorMessage())
+            .build();
+    payment.setStatus(statusEntity);
+    paymentRepository.save(payment);
+    auditLogService.saveAuditLog(
+        payment, previousStatus, newStatus, event.transactionId(), event.errorMessage());
+    log.info(
+        "Payment ID: {} status transition: {} -> {}", payment.getId(), previousStatus, newStatus);
   }
 
   @Transactional
   public PaymentResponse initiatePayment(PaymentRequest request) {
     log.info("Initiating payment for amount: {} {}", request.amount(), request.currency());
-
     Payment payment = paymentMapper.toEntity(request);
     PaymentStatusEntity initialStatus =
         PaymentStatusEntity.builder().payment(payment).status(PaymentStatus.PENDING).build();
     payment.setStatus(initialStatus);
     Payment savedPayment = paymentRepository.save(payment);
-
+    auditLogService.saveAuditLog(savedPayment, null, PaymentStatus.PENDING, null, null);
     log.info("Payment saved with ID: {} and status: PENDING", savedPayment.getId());
-
     saveOutboxEvent(savedPayment);
-
     return paymentMapper.toResponse(savedPayment, "Payment initiated successfully");
   }
 
   private void saveOutboxEvent(Payment payment) {
     try {
       PaymentCreatedEvent event = paymentMapper.toPaymentCreatedEvent(payment);
-
       String payload = objectMapper.writeValueAsString(event);
-
       OutboxEvent outboxEvent =
           OutboxEvent.builder()
               .aggregateId(payment.getId())
@@ -88,8 +90,7 @@ public class PaymentService {
               .payload(payload)
               .processed(false)
               .build();
-
-      outboxRepository.save(outboxEvent);
+      outboxService.save(outboxEvent);
       log.info("Outbox event saved for payment ID: {}", payment.getId());
     } catch (JsonProcessingException e) {
       log.error("Error serializing payment event for outbox", e);
