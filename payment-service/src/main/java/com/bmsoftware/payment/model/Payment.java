@@ -1,13 +1,7 @@
 package com.bmsoftware.payment.model;
 
-import com.bmsoftware.shared.dto.PaymentStatus;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,7 +9,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.UpdateTimestamp;
 
 @Entity
 @Table(name = "payments", schema = "payment")
@@ -39,9 +32,6 @@ public class Payment extends BaseEntity {
   @Column(nullable = false)
   private String senderAccount;
 
-  @Column(nullable = false)
-  @Enumerated(EnumType.STRING)
-  private PaymentStatus status;
-
-  @UpdateTimestamp private LocalDateTime updatedAt;
+  @OneToOne(mappedBy = "payment", cascade = CascadeType.ALL, orphanRemoval = true)
+  private PaymentStatusEntity status;
 }
