@@ -5,6 +5,7 @@ import static org.awaitility.Awaitility.await;
 
 import com.bmsoftware.payment.model.Payment;
 import com.bmsoftware.payment.model.PaymentStatusEntity;
+import com.bmsoftware.payment.repository.PaymentAuditLogRepository;
 import com.bmsoftware.payment.repository.PaymentRepository;
 import com.bmsoftware.shared.dto.PaymentProcessedEvent;
 import com.bmsoftware.shared.dto.PaymentStatus;
@@ -33,6 +34,8 @@ class PaymentStatusListenerIT {
 
   @Autowired private KafkaTemplate<String, String> kafkaTemplate;
 
+  @Autowired private PaymentAuditLogRepository paymentAuditLogRepository;
+
   @Autowired private PaymentRepository paymentRepository;
 
   @Autowired private ObjectMapper objectMapper;
@@ -44,6 +47,7 @@ class PaymentStatusListenerIT {
 
   @BeforeEach
   void setUp() {
+    paymentAuditLogRepository.deleteAll();
     paymentRepository.deleteAll();
     PaymentStatusEntity initialStatus =
         PaymentStatusEntity.builder().status(PaymentStatus.PENDING).build();
