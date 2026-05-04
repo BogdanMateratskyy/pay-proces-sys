@@ -5,14 +5,18 @@ import com.bmsoftware.payment.dto.PaymentResponse;
 import com.bmsoftware.payment.mapper.PaymentMapper;
 import com.bmsoftware.payment.model.OutboxEvent;
 import com.bmsoftware.payment.model.Payment;
+import com.bmsoftware.payment.model.PaymentStatusEntity;
 import com.bmsoftware.payment.repository.OutboxRepository;
 import com.bmsoftware.payment.repository.PaymentRepository;
 import com.bmsoftware.shared.dto.AggregateType;
 import com.bmsoftware.shared.dto.EventType;
 import com.bmsoftware.shared.dto.PaymentCreatedEvent;
+import com.bmsoftware.shared.dto.PaymentProcessedEvent;
 import com.bmsoftware.shared.dto.PaymentStatus;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Optional;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -28,15 +32,42 @@ public class PaymentService {
   private final PaymentMapper paymentMapper;
   private final ObjectMapper objectMapper;
 
+  public Optional<Payment> findById(UUID id) {
+    return paymentRepository.findById(id);
+  }
+
+  @Transactional
+  public void updateStatus(PaymentProcessedEvent event) {
+    UUID paymentId = event.paymentId();
+    findById(paymentId)
+        .ifPresentOrElse(
+            payment -> {
+              PaymentStatus newStatus = event.status();
+              PaymentStatusEntity statusEntity =
+                  PaymentStatusEntity.builder()
+                      .payment(payment)
+                      .status(newStatus)
+                      .transactionId(event.transactionId())
+                      .errorMessage(event.errorMessage())
+                      .build();
+              payment.setStatus(statusEntity);
+              paymentRepository.save(payment);
+              log.info("Payment ID: {} status updated to: {}", paymentId, newStatus);
+            },
+            () -> log.warn("Payment ID: {} not found, skipping status update", paymentId));
+  }
+
   @Transactional
   public PaymentResponse initiatePayment(PaymentRequest request) {
     log.info("Initiating payment for amount: {} {}", request.amount(), request.currency());
 
-    Payment payment = paymentMapper.toEntity(request, PaymentStatus.PENDING);
+    Payment payment = paymentMapper.toEntity(request);
+    PaymentStatusEntity initialStatus =
+        PaymentStatusEntity.builder().payment(payment).status(PaymentStatus.PENDING).build();
+    payment.setStatus(initialStatus);
     Payment savedPayment = paymentRepository.save(payment);
 
-    log.info(
-        "Payment saved with ID: {} and status: {}", savedPayment.getId(), savedPayment.getStatus());
+    log.info("Payment saved with ID: {} and status: PENDING", savedPayment.getId());
 
     saveOutboxEvent(savedPayment);
 
