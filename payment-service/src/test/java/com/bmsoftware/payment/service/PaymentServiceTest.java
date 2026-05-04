@@ -13,7 +13,6 @@ import com.bmsoftware.payment.mapper.PaymentMapper;
 import com.bmsoftware.payment.model.OutboxEvent;
 import com.bmsoftware.payment.model.Payment;
 import com.bmsoftware.payment.model.PaymentStatusEntity;
-import com.bmsoftware.payment.repository.OutboxRepository;
 import com.bmsoftware.payment.repository.PaymentRepository;
 import com.bmsoftware.shared.dto.PaymentCreatedEvent;
 import com.bmsoftware.shared.dto.PaymentProcessedEvent;
@@ -35,7 +34,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class PaymentServiceTest {
 
   @Mock private PaymentRepository paymentRepository;
-  @Mock private OutboxRepository outboxRepository;
+  @Mock private OutboxService outboxService;
+  @Mock private PaymentAuditLogService auditLogService;
   @Mock private PaymentMapper paymentMapper;
   @Mock private ObjectMapper objectMapper;
 
@@ -88,6 +88,9 @@ class PaymentServiceTest {
     assertThat(saved.getStatus().getStatus()).isEqualTo(PaymentStatus.SUCCESS);
     assertThat(saved.getStatus().getTransactionId()).isEqualTo("TXN-001");
     assertThat(saved.getStatus().getErrorMessage()).isNull();
+
+    verify(auditLogService)
+        .saveAuditLog(payment, PaymentStatus.PENDING, PaymentStatus.SUCCESS, "TXN-001", null);
   }
 
   @Test
@@ -105,6 +108,8 @@ class PaymentServiceTest {
     assertThat(saved.getStatus().getStatus()).isEqualTo(PaymentStatus.FAILED);
     assertThat(saved.getStatus().getErrorMessage()).isEqualTo("Bank timeout");
     assertThat(saved.getStatus().getTransactionId()).isNull();
+
+    verify(auditLogService).saveAuditLog(payment, null, PaymentStatus.FAILED, null, "Bank timeout");
   }
 
   @Test
@@ -122,10 +127,8 @@ class PaymentServiceTest {
   void initiatePayment_success_savesPaymentAndOutboxEvent() throws JsonProcessingException {
     PaymentRequest request =
         new PaymentRequest(BigDecimal.valueOf(100), "USD", "ACC-REC-001", "ACC-SND-001");
-
     Payment mappedPayment = new Payment();
     mappedPayment.setId(paymentId);
-
     PaymentStatusEntity savedStatus =
         PaymentStatusEntity.builder().status(PaymentStatus.PENDING).build();
     mappedPayment.setStatus(savedStatus);
@@ -155,13 +158,14 @@ class PaymentServiceTest {
 
     assertThat(response).isEqualTo(expectedResponse);
     verify(paymentRepository).save(mappedPayment);
-    verify(outboxRepository).save(any(OutboxEvent.class));
 
     ArgumentCaptor<OutboxEvent> outboxCaptor = ArgumentCaptor.forClass(OutboxEvent.class);
-    verify(outboxRepository).save(outboxCaptor.capture());
+    verify(outboxService).save(outboxCaptor.capture());
     OutboxEvent outbox = outboxCaptor.getValue();
     assertThat(outbox.getAggregateId()).isEqualTo(paymentId);
     assertThat(outbox.isProcessed()).isFalse();
+
+    verify(auditLogService).saveAuditLog(mappedPayment, null, PaymentStatus.PENDING, null, null);
   }
 
   @Test
@@ -169,7 +173,6 @@ class PaymentServiceTest {
       throws JsonProcessingException {
     PaymentRequest request =
         new PaymentRequest(BigDecimal.valueOf(50), "EUR", "ACC-REC-002", "ACC-SND-002");
-
     Payment mappedPayment = new Payment();
     mappedPayment.setId(paymentId);
     mappedPayment.setStatus(PaymentStatusEntity.builder().status(PaymentStatus.PENDING).build());
@@ -194,6 +197,6 @@ class PaymentServiceTest {
         .isInstanceOf(RuntimeException.class)
         .hasMessageContaining("Failed to initiate payment due to serialization error");
 
-    verify(outboxRepository, never()).save(any());
+    verify(outboxService, never()).save(any());
   }
 }

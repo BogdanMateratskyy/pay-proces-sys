@@ -1,7 +1,6 @@
 package com.bmsoftware.payment.service;
 
 import com.bmsoftware.payment.model.OutboxEvent;
-import com.bmsoftware.payment.repository.OutboxRepository;
 import com.bmsoftware.shared.dto.EventType;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -16,13 +15,13 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class OutboxPublisher {
 
-  private final OutboxRepository outboxRepository;
+  private final OutboxService outboxService;
   private final KafkaTemplate<String, String> kafkaTemplate;
 
   @Scheduled(fixedDelay = 5000)
   @Transactional
   public void publishEvents() {
-    List<OutboxEvent> events = outboxRepository.findByProcessedFalseOrderByCreatedAtAsc();
+    List<OutboxEvent> events = outboxService.findUnprocessed();
 
     if (events.isEmpty()) {
       return;
@@ -48,7 +47,7 @@ public class OutboxPublisher {
         // In a more robust implementation, we might wait for the completion callback,
         // but that's trickier with @Transactional and simple Outbox.
         event.setProcessed(true);
-        outboxRepository.save(event);
+        outboxService.save(event);
 
       } catch (Exception e) {
         log.error("Error processing outbox event {}", event.getId(), e);
