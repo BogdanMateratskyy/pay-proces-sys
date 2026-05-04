@@ -2,6 +2,7 @@ package com.bmsoftware.payment.service;
 
 import com.bmsoftware.payment.dto.PaymentRequest;
 import com.bmsoftware.payment.dto.PaymentResponse;
+import com.bmsoftware.payment.exception.PaymentNotFoundException;
 import com.bmsoftware.payment.mapper.PaymentMapper;
 import com.bmsoftware.payment.model.OutboxEvent;
 import com.bmsoftware.payment.model.Payment;
@@ -34,6 +35,14 @@ public class PaymentService {
 
   public Optional<Payment> findById(UUID id) {
     return paymentRepository.findById(id);
+  }
+
+  public PaymentResponse getPaymentById(UUID id) {
+    Payment payment =
+        paymentRepository
+            .findById(id)
+            .orElseThrow(() -> new PaymentNotFoundException("Payment not found with ID: " + id));
+    return paymentMapper.toResponse(payment, "Payment retrieved successfully");
   }
 
   @Transactional

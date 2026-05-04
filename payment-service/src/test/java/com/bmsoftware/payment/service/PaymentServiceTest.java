@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import com.bmsoftware.payment.dto.PaymentRequest;
 import com.bmsoftware.payment.dto.PaymentResponse;
+import com.bmsoftware.payment.exception.PaymentNotFoundException;
 import com.bmsoftware.payment.mapper.PaymentMapper;
 import com.bmsoftware.payment.model.OutboxEvent;
 import com.bmsoftware.payment.model.Payment;
@@ -166,6 +167,32 @@ class PaymentServiceTest {
     assertThat(outbox.isProcessed()).isFalse();
 
     verify(auditLogService).saveAuditLog(mappedPayment, null, PaymentStatus.PENDING, null, null);
+  }
+
+  @Test
+  void getPaymentById_whenExists_returnsPaymentResponse() {
+    PaymentStatusEntity status =
+        PaymentStatusEntity.builder().status(PaymentStatus.PENDING).build();
+    payment.setStatus(status);
+    when(paymentRepository.findById(paymentId)).thenReturn(Optional.of(payment));
+    PaymentResponse expected =
+        new PaymentResponse(paymentId, "PENDING", "Payment retrieved successfully");
+    when(paymentMapper.toResponse(payment, "Payment retrieved successfully")).thenReturn(expected);
+
+    PaymentResponse result = paymentService.getPaymentById(paymentId);
+
+    assertThat(result).isEqualTo(expected);
+    verify(paymentRepository).findById(paymentId);
+    verify(paymentMapper).toResponse(payment, "Payment retrieved successfully");
+  }
+
+  @Test
+  void getPaymentById_whenNotExists_throwsPaymentNotFoundException() {
+    when(paymentRepository.findById(paymentId)).thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> paymentService.getPaymentById(paymentId))
+        .isInstanceOf(PaymentNotFoundException.class)
+        .hasMessageContaining(paymentId.toString());
   }
 
   @Test
