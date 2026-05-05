@@ -6,6 +6,7 @@ import com.bmsoftware.shared.dto.PaymentStatus;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,9 @@ public class PaymentEventListener {
   private final ObjectMapper objectMapper;
   private final RoutingService routingService;
   private final KafkaTemplate<String, String> kafkaTemplate;
+
+  @Value("${spring.kafka.consumer.payment-processed-topic}")
+  public String paymentsProcessedTopic;
 
   @KafkaListener(
       topics = "${spring.kafka.consumer.payment-created-topic}",
@@ -55,7 +59,7 @@ public class PaymentEventListener {
       PaymentProcessedEvent processedEvent =
           new PaymentProcessedEvent(event.paymentId(), status, transactionId, error);
       String payload = objectMapper.writeValueAsString(processedEvent);
-      kafkaTemplate.send("payments.processed", event.paymentId().toString(), payload);
+      kafkaTemplate.send(paymentsProcessedTopic, event.paymentId().toString(), payload);
       log.info("Published payment processed event for ID: {}", event.paymentId());
     } catch (Exception e) {
       log.error("Failed to publish processed event for ID: {}", event.paymentId(), e);
