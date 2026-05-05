@@ -4,6 +4,7 @@ spring:
     consumer:
       group-id: test-group
       payment-created-topic: tests.pay-created
+      payment-processed-topic: tests.processed
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
